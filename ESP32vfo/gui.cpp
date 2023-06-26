@@ -321,6 +321,7 @@ void my_touchpad_read(lv_indev_drv_t* indev_driver, lv_indev_data_t* data)
 	if (tft.getRotation() == 1)
 	{
 		touchX = screenWidth - touchX;
+		touchY = screenHeight - touchY;  // only for 3.2 inch
 	}
 
 	if (!touched)
