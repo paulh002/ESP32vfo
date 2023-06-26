@@ -121,6 +121,7 @@
     <ClInclude Include="measurement.h" />
     <ClInclude Include="network.h" />
     <ClInclude Include="si5351.h" />
+    <ClInclude Include="SwrBarClass.h" />
     <ClInclude Include="vfo.h" />
     <ClInclude Include="__vm\.ESP32vfo.vsarduino.h" />
   </ItemGroup>
@@ -137,6 +138,8 @@
     <ClCompile Include="measurement.cpp" />
     <ClCompile Include="network.cpp" />
     <ClCompile Include="si5351.cpp" />
+    <ClCompile Include="SwrBarClass.cpp" />
+    <ClCompile Include="ui_img_indicator_hor_png.c" />
     <ClCompile Include="Vfo.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

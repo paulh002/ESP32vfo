@@ -321,7 +321,7 @@ void my_touchpad_read(lv_indev_drv_t* indev_driver, lv_indev_data_t* data)
 	if (tft.getRotation() == 1)
 	{
 		touchX = screenWidth - touchX;
-		touchY = screenHeight - touchY;  // only for 3.2 inch
+		//touchY = screenHeight - touchY;  // only for 3.2 inch
 	}
 
 	if (!touched)
@@ -433,6 +433,21 @@ void Gui::init()
 	lv_obj_clear_flag(bg_middle, LV_OBJ_FLAG_SCROLLABLE);
 	lv_obj_set_style_pad_hor(bg_middle, 0, LV_PART_MAIN);
 	lv_obj_set_style_pad_ver(bg_middle, 0, LV_PART_MAIN);
+
+	smeterLabel = lv_label_create(bg_middle);
+	lv_obj_set_width(smeterLabel, LV_SIZE_CONTENT);   /// 1
+	lv_obj_set_height(smeterLabel, LV_SIZE_CONTENT);    /// 1
+	//lv_obj_set_x(smeterLabel, 0);
+	//lv_obj_set_y(smeterLabel, 120);
+	lv_obj_align(smeterLabel, LV_ALIGN_TOP_MID, 0, 100);
+	lv_label_set_text(smeterLabel, "S         1     3     5     7     9     20     40     60");
+	lv_obj_set_style_text_color(smeterLabel, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+	lv_obj_set_style_text_opa(smeterLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+	SmeterBar.init(bg_middle, 6 * (LV_HOR_RES / 8), 120);
+	SmeterBar.align(bg_middle, LV_ALIGN_TOP_MID, 0, 120);
+	SmeterBar.SetRange(4096);
+	SmeterBar.value(100);
 
 	// Create groups for encoder support for the different screens
 	vfo_group = lv_group_create();
@@ -1187,6 +1202,8 @@ void Gui::operator()(void* arg)
 		lv_timer_handler();
 		xSemaphoreGive(GuiBinarySemaphore);
 		
+		SmeterBar.value(get_smeter());
+
 		if ((f_cal_si5351 == false) && (f_bfo_adjust == false))  // Both si5351 and bfo adjust use optical encoder, so don't change vfo freq at the same time
 		{
 			int count = Enc_vfo.getCount();

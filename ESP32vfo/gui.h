@@ -13,6 +13,7 @@
 #include <RotaryEncoder.h>
 #include <lvgl.h>
 #include <ESP32Encoder.h>
+#include "SwrBarClass.h"
 
 #define LV_COLOR_WHITE   LV_COLOR_MAKE(0xFF, 0xFF, 0xFF)
 #define LV_COLOR_SILVER  LV_COLOR_MAKE(0xC0, 0xC0, 0xC0)
@@ -151,6 +152,9 @@ private:
 	lv_obj_t* si_unit;
 	lv_obj_t* si_label1;
 	lv_group_t* si_5351_group;
+
+	lv_obj_t* smeterLabel;
+	SwrBarClass SmeterBar;
 
 	lv_obj_t* bg_middle2;
 	lv_obj_t* btn_matrix;
