@@ -1,5 +1,7 @@
 # ESP32vfo
 
+Disclaimer -->  source code developement is in progress not all functions are migrated from the old version!
+
 Source code for VFO-ESP32-Si5351 v3 
 A new PCB size 10cm x 5.6 cm 4 layers this can be lowcost produced.
 Supports 1 optical encoder and multiple rotary encoders through a pcf8574
