@@ -10,17 +10,13 @@
 #include <TCA9548.h>
 #include <RotaryEncoder.h>
 #include "gui.h"
-//#include "credentials.h"
+#include "credentials.h"
 #include "measurement.h"
 #include "network.h"
 #include "io.h"
 #include "vfo.h"
 #include "_EEPROMAnything.h"
 #include "FT891_CAT.h"
-
-#define NUMBR_SSID 1
-const char* _ssid[] = { "Network" };
-const char* _password[] = { "password" };
 
 SemaphoreHandle_t swrBinarySemaphore = NULL;
 SemaphoreHandle_t NetSemaphore = NULL;
@@ -58,7 +54,7 @@ void setup() {
 	//LoadEEPROM();
 	gui.gui_setup();
 
-	R.wifi_onoff = false;
+	R.wifi_onoff = true;
 	delay(10);
 	if (strlen(R.ssid[0]) == 0) // If no ssid configured take from credentials.h
 	{

@@ -674,6 +674,7 @@ void Gui::init()
 	// Set default focus to band selector
 	lv_group_focus_obj(lsb_button);
 	lv_obj_add_state(lsb_button, LV_STATE_CHECKED);
+	init_wifi();
 	return;
 }
 
@@ -1132,34 +1133,6 @@ void Gui::gui_setup(lv_obj_t* scr)
 	lv_obj_align_to(pwd_label1, btn_matrix, LV_ALIGN_OUT_TOP_LEFT, 0, 0);
 }
 
-void Gui::gui_loop()
-{
-	if (enc_irq.flag)
-	{
-		/*long mtime, mtime1;
-		mtime = mtime1 = millis();
-		while (mtime1 - mtime < 10)
-		{
-			decoder.tick();
-			mtime1 = millis();
-		}
-		*/
-		decoder.tick();
-		Serial.printf("Button 1 has been pressed %u times\n", enc_irq.counter);
-		enc_irq.flag = false;
-	}
-
-	xSemaphoreTake(GuiBinarySemaphore, portMAX_DELAY); 
-	lv_timer_handler();
-	xSemaphoreGive(GuiBinarySemaphore);
-	int count = Enc_vfo.getCount();
-	if (count != 0)
-	{
-		freq += count * freq_step;
-		setfrequencylabel(freq, freq, false);
-		Enc_vfo.clearCount();
-	}
-}
 extern RotaryEncoder decoder;
 
 void Gui::operator()(void* arg)
@@ -1647,8 +1620,11 @@ void Gui::Save_wifi(const char* buf)
 
 	memset(str, 0, 80);
 	strncpy(str, buf, 79);
-	char* ptr = strchr(str, ' ');
-	if (ptr) *ptr = '\0';
+	char* ptr = strrchr(str, '(');
+	if (ptr) {
+		ptr--;
+		*ptr = '\0';
+	}
 	lv_obj_add_flag(wifi_scan_list, LV_OBJ_FLAG_HIDDEN);
 	lv_obj_add_flag(cancel_btn, LV_OBJ_FLAG_HIDDEN);
 	ssidName = String(str);
@@ -1661,8 +1637,8 @@ void wifilist_event_handler(lv_event_t *e)
 	lv_obj_t* obj = lv_event_get_target(e);
 
 	if (code == LV_EVENT_CLICKED) {
-		uint32_t id = lv_btnmatrix_get_selected_btn(obj);
-		const char* txt = lv_btnmatrix_get_btn_text(obj, id);
+		lv_obj_t* parent = lv_obj_get_parent(obj);
+		const char* txt = lv_list_get_btn_text(parent, obj);
 		gui.Save_wifi(txt);
 	}
 }

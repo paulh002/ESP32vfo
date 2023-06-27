@@ -41,7 +41,6 @@ protected:
 
 public:
 	void	init();
-	void	gui_loop();
 	void	set_time_label();
 	void	hide_buttons(bool hide);
 	void	hide_setting(bool hide);
