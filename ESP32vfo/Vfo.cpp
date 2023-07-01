@@ -1,6 +1,3 @@
-// 
-// 
-// 
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include "gui.h"
@@ -10,6 +7,7 @@
 #include "FT891_CAT.h"
 #include "si5351.h"
 #include "measurement.h"
+#include "BandFilter.h"
 
 uint8_t			c_rxtx = -1; // detect rx_tx change
 uint8_t			f_rxtx = 0;  // initial rx
@@ -26,8 +24,6 @@ const unsigned long freqswitch_high[] = { 1880000,3800000,5450000,7200000,101500
 const uint8_t mode[] = { 0,0,0,0,1,1,1,1,1,1 };  //default modes per band 0 LSB, 1 USB
 long  current_frq1[] = { 1800000,3500000,5350000,7000000,10100000,14000000,18068000,21000000,28000000 };
 long  current_frq2[] = { 1800000,3500000,5350000,7000000,10100000,14000000,18068000,21000000,28000000 };
-const uint8_t	bpf_band[] = { BP_160M ,BP_80M, BP_60M , BP_40M, BP_30M, BP_20M, BP_17M, BP_15M, BP_10M };
-const uint8_t	lpf_band[] = { LP_80M ,LP_80M, LP_40M, LP_40M, LP_20M, LP_20M, LP_10M, LP_10M, LP_10M };
 const uint8_t freq_step = 10;           // step[Hz]
 const uint8_t bmax = 8;
 long  current_bfo;
@@ -76,6 +72,7 @@ void start_vfo()
 	Serial.println("Bfo : " + String(bfo_frq));
 	Serial.println("vfo : " + String(frq));
 	io_rxtx(f_rxtx);
+	bpf.setBand(band, f_rxtx);
 	io_setbfo(bfo_frq);
 	io_setvfo(frq, bfo_frq);
 	CAT.SetFA(current_frq1[f_band[0]]);
@@ -182,7 +179,7 @@ void mode_select(int new_band, int active_vfo)
 			CAT.SetMDA(MODE_LSB+1);
 		}
 		f_band[active_vfo] = new_band;
-		switch_band(active_vfo);
+		switch_band(active_vfo, f_rxtx);
 	}
 }
 
@@ -283,7 +280,7 @@ void check_rx_tx()
 		io_rxtx(f_rxtx);
 		gui.ToggleTX(f_rxtx);
 		c_rxtx = f_rxtx;
-		switch_band(gui.active_vfo);
+		switch_band(gui.active_vfo, f_rxtx);
 	}
 }
 
@@ -322,7 +319,7 @@ long  set_encoder_count_to_vfo_frequency(int count, int active_vfo)
 	if (old_band != band)
 	{
 		// switch band
-		switch_band(active_vfo);
+		switch_band(active_vfo, f_rxtx);
 		//Serial.println("change band");
 	}
 	return frq;
@@ -375,7 +372,7 @@ long switch_vfo(int active_vfo)
 		uint8_t band = f_band[active_vfo];
 		f_band[active_vfo] = -1; //make sure mode_select will change mode
 		mode_select(band, active_vfo);
-		switch_band(active_vfo);
+		switch_band(active_vfo, f_rxtx);
 		gui.Togglemode(f_mode[active_vfo],0);
 	}
 	io_setvfo(frq, bfo_frq[active_vfo]);
@@ -383,13 +380,9 @@ long switch_vfo(int active_vfo)
 }
 
 // send commands to lpf and bpf
-void switch_band(int active_vfo)
+void switch_band(int active_vfo, int txrx)
 {
-	byte bpf, lpf;
-
-	bpf = bpf_band[f_band[active_vfo]];
-	lpf = lpf_band[f_band[active_vfo]];
-	shiftOut(bpf, lpf, f_rxtx);
+	bpf.setBand(f_band[active_vfo], txrx);
 }
 
 long get_vfo_frequency(int active_vfo)

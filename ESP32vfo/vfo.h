@@ -31,7 +31,7 @@ void start_vfo();
 void save_vfo();
 void setbfo(uint32_t bfo_frq);
 long switch_vfo(int active_vfo);
-void switch_band(int active_vfo);
+void switch_band(int active_vfo, int rxtx);
 long get_vfo_frequency(int active_vfo);
 uint32_t get_bfo(int active_vfo);
 uint16_t get_smeter();

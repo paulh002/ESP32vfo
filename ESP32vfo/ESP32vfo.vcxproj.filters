@@ -42,6 +42,12 @@
     <ClInclude Include="SwrBarClass.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="BandFilter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PCF8574.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gui.cpp">
@@ -79,6 +85,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ui_img_indicator_hor_png.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BandFilter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PCF8574.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

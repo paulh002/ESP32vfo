@@ -1,15 +1,8 @@
 #include <arduino.h>
+#include <Wire.h>
 #include <WiFi.h>
-#include <WiFiClient.h>
-#include <WebServer.h>
-#include <ESPmDNS.h>
-#include <Update.h>
-#include <ArduinoOTA.h>
 #include "measurement.h"
-#include <RotaryEncoder.h>
-#include "IO.h"
 #include "network.h"
-
 
 volatile adbuffer_t measure;// Two 256 byte circular buffers carrying the sampled adc-inputs
                             // from the interrupt function to the main loop.
@@ -53,7 +46,9 @@ TaskHandle_t    Task_poll;
 
 void start_measurement()
 {
+    adc_init(); 
     memset((void *)&measure, 0, sizeof(adbuffer_t));
+    memset((void*)lcd_buf, 0, 82);
     xTaskCreatePinnedToCore(adc_poll_and_feed_circular, "adc_poll", 4096, NULL, 1, &Task_poll, 0);
 }
 
@@ -62,7 +57,7 @@ void stop_measurement()
     vTaskDelete(Task_poll);
 }
 
-
+int lastRandomEncoding = 0;
 void adc_poll_and_feed_circular(void* pvParameters)
 {
   //----------------------------------------------------------------------------
@@ -70,11 +65,22 @@ void adc_poll_and_feed_circular(void* pvParameters)
   // Each poll of the builtin ADC is measured to take 130us if averaging set at 8.
     while(1)
     {
-        //int16_t result_fwd = (int16_t)random(1025, 3000); // analogRead(Pfwd);
-        //int16_t result_ref = (int16_t)random(1000, 2000); // analogRead(Pref);  // ref=ADC0, fwd=ADC1
+        int16_t result_fwd;
+        int16_t result_ref;
+
+        int currMillis = millis();
+        if (currMillis - lastRandomEncoding > 1500)
+        {
+
+            result_fwd = (int16_t)random(1000, 2800); // analogRead(Pfwd);
+            result_ref = (int16_t)random(1500, 2000); // analogRead(Pref);  // ref=ADC0, fwd=ADC1
+            lastRandomEncoding = currMillis;
+        }
+        //result_fwd = analogRead(Pfwd);
+        //result_ref = analogRead(Pref);  // ref=ADC0, fwd=ADC1
         xSemaphoreTake(swrBinarySemaphore, portMAX_DELAY);
-        measure.fwd[measure.incount] = analogRead(FWD_METER); 
-        measure.rev[measure.incount] = analogRead(REV_METER); 
+        measure.fwd[measure.incount] = result_fwd; //analogRead(FWD_METER);
+        measure.rev[measure.incount] = result_ref; // analogRead(REV_METER);
         measure.incount++;                        // 8 bit value, rolls over at 256
         xSemaphoreGive(swrBinarySemaphore);
         //Serial.println("fwd:" + String(measure.fwd[measure.incount]) + " rev:" + String(measure.rev[measure.incount]));
@@ -100,14 +106,14 @@ void pswr_sync_from_interrupt(void)
 
     in = measure.incount;
   }
- // char str[82];
- // sprintf(str,"ad8307_FdBm %f  ad8307_RdBm %f\r\n", ad8307_FdBm,ad8307_RdBm );
- // DebugServer.writeAll((const uint8_t*)str, strlen(str));
- // sprintf(str,"fwd_power_mw %f ref_power_mw %f power_mw %f\r\n", fwd_power_mw, ref_power_mw, power_mw );
- // DebugServer.writeAll((const uint8_t*)str, strlen(str));
- // sprintf(str,"rev_power_db %f power_db %f power_db_pk %f\r\n", rev_power_db, power_db , power_db_pk);
- // DebugServer.writeAll((const uint8_t*)str, strlen(str));
-
+ /* char str[82];
+  sprintf(str,"ad8307_FdBm %f  ad8307_RdBm %f\r\n", ad8307_FdBm,ad8307_RdBm );
+  DebugServer.writeAll((const uint8_t*)str, strlen(str));
+  sprintf(str,"fwd_power_mw %f ref_power_mw %f power_mw %f\r\n", fwd_power_mw, ref_power_mw, power_mw );
+  DebugServer.writeAll((const uint8_t*)str, strlen(str));
+  sprintf(str,"rev_power_db %f power_db %f power_db_pk %f\r\n", rev_power_db, power_db , power_db_pk);
+  DebugServer.writeAll((const uint8_t*)str, strlen(str));
+  */
   xSemaphoreGive( swrBinarySemaphore );
 }
 
@@ -137,16 +143,16 @@ void pswr_determine_dBm(void)
   // measured dB values are: (V - V_Cal1) * slope_gradient + dB_Cal1
   //char str[82];
   //sprintf(str, "R.cal_AD[0].Fwd %f  R.cal_AD[0].Rev %f R.cal_AD[0].db10m %d\r\n", R.cal_AD[0].Fwd, R.cal_AD[0].Rev, R.cal_AD[0].db10m);
-  //DebugServer.writeAll((const uint8_t*)str, strlen(str));
-  //sprintf(str, "R.cal_AD[1].Fwd %f  R.cal_AD[1].Rev R.cal_AD[1].db10m %d \r\n", R.cal_AD[1].Fwd, R.cal_AD[1].Rev, R.cal_AD[1].db10m);
  // DebugServer.writeAll((const uint8_t*)str, strlen(str));
+ // sprintf(str, "R.cal_AD[1].Fwd %f  R.cal_AD[1].Rev R.cal_AD[1].db10m %d \r\n", R.cal_AD[1].Fwd, R.cal_AD[1].Rev, R.cal_AD[1].db10m);
+  //DebugServer.writeAll((const uint8_t*)str, strlen(str));
 
   //Serial.println (str);
   //sprintf(str, "delta_db %f  delta_F %f delta_R %f\r\n", delta_db, delta_F, delta_R);
   //DebugServer.writeAll((const uint8_t*)str, strlen(str));
 
 
-  //sprintf(str,"fwd %f  rev %f\r\n", fwd,rev );
+  //sprintf(str,"fwd %d  rev %d\r\n", fwd,rev );
   //DebugServer.writeAll((const uint8_t*)str, strlen(str));
   //Serial.println (str);
   
@@ -211,9 +217,9 @@ void determine_power_pep_pk(void)
   r_inst = pow(10,(ad8307_RdBm)/20.0);
   ref_power_mw = SQR(r_inst);
   
-  //char str[80];
+  //char str[180];
 
-  //sprintf(str, "fwd_power_mw %f  ref_power_mw %f\r\n", fwd_power_mw, ref_power_mw);
+  //sprintf(str, "ad8307_FdBm %f fwd_power_mw %f  ad8307_RdBm %f ref_power_mw %f\r\n", ad8307_FdBm, fwd_power_mw, ad8307_RdBm, ref_power_mw);
   //Serial.println (str);
   //DebugServer.writeAll((const uint8_t*)str, strlen(str));
 
@@ -225,6 +231,10 @@ void determine_power_pep_pk(void)
   power_mw = fwd_power_mw - ref_power_mw;
   power_db = 10 * log10(power_mw);
   rev_power_db = 10 * log10(ref_power_mw);
+
+  //sprintf(str, "power_mw %f  ref_power_mw %f\r\n", power_mw, ref_power_mw);
+  //Serial.println (str);
+ // DebugServer.writeAll((const uint8_t*)str, strlen(str));
 
   //------------------------------------------
   // Find peaks and averages
@@ -300,71 +310,104 @@ void determine_power_pep_pk(void)
 
 //
 //-----------------------------------------------------------------------------
-//      Print Power, input value is in milliWatts, 
-//      returns string in lcd_buf
+//      Print Power, input value is in milliWatts
 //-----------------------------------------------------------------------------
 //
-uint16_t print_p_mw(double pwr)
+uint16_t print_p_mw_value(double pwr, std::string &value)
 {
-  int8_t r = 3;                   // Start in the mW range
-  uint8_t offs=0;
-  const char *indicator[] = { "pW", "nW", "uW", "mW", "W", "kW", "MW", "GW" /* hah! */ };
-  double p;
- 
-  if (pwr < 0) pwr *= -1;         // ABS() for float
-  p = pwr;
-  
-  #if AD8307_INSTALLED            // Only relevant when not diode detectors
-  // If lowpower print threshold has NOT been set at 10 uW and power is below 1mW
-  if (R.low_power_floor != FLOOR_TEN_uW)
-  {
-    while ((p < 1.0) && (r > 0))  // Power levels below one milliwatt, down to pW
-    {
-      p *= 1000.0;
-      r -= 1;
-    }
-  }
-  #endif
+    int8_t r = 3;                   // Start in the mW range
+    uint8_t offs = 0;
+    const char* indicator[] = { "pW", "nW", "uW", "mW", "W", "kW", "MW", "GW" /* hah! */ };
+    double p;
+    char buffer[82];
 
-  while ((p >= 1000) && (r < 7))  // Power levels above one watt, up to GW
-  {
-    p /= 1000.0;
-    r +=1;    
-  }
-  
-  if (r == 4)                     // Different format if "W"
-  {
-    lcd_buf[0]=' ';
-    offs=1;    
-  }
-  
-  #if AD8307_INSTALLED            // These are only relevant when not diode detectors
-  // If lowpower print threshold has been set at 1 uW and power is below that threshold
-  if ((R.low_power_floor == FLOOR_ONE_uW) && (pwr < 0.001))
-    sprintf(lcd_buf+offs,"  0 uW");
-  // If lowpower print threshold has been set at 10 uW and power is below that threshold
-  else if ((R.low_power_floor == FLOOR_TEN_uW) && (pwr < 0.01))
-    sprintf(lcd_buf+offs,"  0 uW");
-  // If lowpower print threshold has been set at 100 uW and power is below that threshold
-  else if ((R.low_power_floor == FLOOR_100_uW) && (pwr < 0.1))
-    sprintf(lcd_buf+offs,"  0 uW");
-  // If lowpower print threshold has been set at 1 mW and power is below that threshold
-  else if ((R.low_power_floor == FLOOR_ONE_mW) && (pwr < 1.0))
-    sprintf(lcd_buf+offs,"  0 mW");
-  // If lowpower print threshold has been set at 1 mW and power is below that threshold
-  else if ((R.low_power_floor == FLOOR_TEN_mW) && (pwr < 10.0))
-    sprintf(lcd_buf+offs,"  0 mW");
-  else
-  #endif
-  // 9.995 rather than 10.00 for correct round-up when two subdecimal formatting
-  {
-    if     (p >= 99.95) sprintf(lcd_buf+offs," %3u%s",   (uint16_t)p, indicator[r]);
-    else if(p >= 9.995) sprintf(lcd_buf+offs,"%2.01f%s", p, indicator[r]);
-    else if(p <  9.995) sprintf(lcd_buf+offs,"%1.02f%s", p, indicator[r]);
-    if (strlen(lcd_buf) > 6) lcd_buf[6] = '\0'; // Belt and braces
-  }
-return floor(p);
+    if (pwr < 0) pwr *= -1;         // ABS() for float
+    p = pwr;
+
+#if AD8307_INSTALLED            // Only relevant when not diode detectors
+    // If lowpower print threshold has NOT been set at 10 uW and power is below 1mW
+    if (R.low_power_floor != FLOOR_TEN_uW)
+    {
+        while ((p < 1.0) && (r > 0))  // Power levels below one milliwatt, down to pW
+        {
+            p *= 1000.0;
+            r -= 1;
+        }
+    }
+#endif
+
+    while ((p >= 1000) && (r < 7))  // Power levels above one watt, up to GW
+    {
+        p /= 1000.0;
+        r += 1;
+    }
+
+    if (r == 4)                     // Different format if "W"
+    {
+        lcd_buf[0] = ' ';
+        offs = 1;
+    }
+
+#if AD8307_INSTALLED            // These are only relevant when not diode detectors
+    // If lowpower print threshold has been set at 1 uW and power is below that threshold
+    if ((R.low_power_floor == FLOOR_ONE_uW) && (pwr < 0.001))
+    {
+        value = "0uW";
+    }
+    // If lowpower print threshold has been set at 10 uW and power is below that threshold
+    else if ((R.low_power_floor == FLOOR_TEN_uW) && (pwr < 0.01))
+    {
+        value = "0uW";
+    }
+    // If lowpower print threshold has been set at 100 uW and power is below that threshold
+    else if ((R.low_power_floor == FLOOR_100_uW) && (pwr < 0.1))
+    {
+        value = "0uW";
+    }
+    // If lowpower print threshold has been set at 1 mW and power is below that threshold
+    else if ((R.low_power_floor == FLOOR_ONE_mW) && (pwr < 1.0))
+    {
+        value = "0mW";
+    }
+    // If lowpower print threshold has been set at 1 mW and power is below that threshold
+    else if ((R.low_power_floor == FLOOR_TEN_mW) && (pwr < 10.0))
+    {
+        value = "0mW";
+    }
+    else
+#endif
+        // 9.995 rather than 10.00 for correct round-up when two subdecimal formatting
+    {
+        if (p >= 99.95) {
+            sprintf(buffer, "%3u", (uint16_t)p);
+            value = std::string(buffer) + std::string(indicator[r]);
+        }
+        else if (p >= 9.995)
+        {
+            if (r > 3)
+                sprintf(buffer, "%2.01f", p);
+            else
+                sprintf(buffer, "%2.0f", p);
+            value = std::string(buffer) + std::string(indicator[r]);
+        }
+        else if (p < 9.995) 
+        {
+            if (r > 3)
+                sprintf(buffer, "%1.02f", p);
+            else
+                sprintf(buffer, "%1.0f", p);
+            value = std::string(buffer) + std::string(indicator[r]);
+        }
+    }
+    //char str[180];
+
+   // sprintf(str,"value %s p %f \n\r", value.c_str(), p);
+    //Serial.println (str);
+    //DebugServer.writeAll((const uint8_t*)str, strlen(str));
+
+    return floor(p);
 }
+
 
 //
 //-----------------------------------------------------------------------------------------
@@ -469,7 +512,6 @@ uint16_t  print_swr(void)
 return swr_avg * 100;
 }
 
-
 uint8_t check_input_cal()
 {
     double fwd, rev;
@@ -478,7 +520,7 @@ uint8_t check_input_cal()
     fwd = (adc_ref * ((double)analogRead(FWD_METER) / 4096.0)) ;
     rev = (adc_ref * ((double)analogRead(REV_METER) / 4096.0)) ;
     
-  //  DebugServer.print(0,"Fwd: " + String(fwd) + "Fwd: " + String(rev) + "slope: " + String(((fwd - rev) * 1000.0 / LOGAMP2_SLOPE)) + "\r\n");
+    DebugServer.print(0,"Fwd: " + String(fwd) + " Rev: " + String(rev) + "slope: " + String(((fwd - rev) * 1000.0 / LOGAMP2_SLOPE)) + "\r\n");
     
     if ((((fwd - rev) * 1000.0 / LOGAMP2_SLOPE) > CAL_INP_QUALITY) && (cal_sig_direction_quality != CAL_FWD))
     {
@@ -497,4 +539,33 @@ uint8_t check_input_cal()
         cal_sig_direction_quality = CAL_BAD;
     }
     return cal_sig_direction_quality;
+}
+
+void init_measurement(bool upgrade)
+{
+    long  current_frq1[] = { 1800000,3500000,7000000,14000000,21000000,28000000 };
+    long  current_frq2[] = { 1800000,3500000,7000000,14000000,21000000,28000000 };
+
+    // default settings
+    memset(&R, 0, sizeof(var_t));
+    memcpy(R.current_frq1, current_frq1, sizeof(current_frq1));
+    memcpy(R.current_frq2, current_frq2, sizeof(current_frq2));
+    R.band[0] = 1;
+    R.band[1] = 1;
+    R.active_vfo = 0;
+    R.cal_AD[0].db10m = CAL1_NOR_VALUE;
+    R.cal_AD[0].Fwd = CALFWD1_DEFAULT;
+    R.cal_AD[0].Rev = CALREV1_DEFAULT;
+    R.cal_AD[1].db10m = CAL2_NOR_VALUE;
+    R.cal_AD[1].Fwd = CALFWD2_DEFAULT;
+    R.cal_AD[1].Rev = CALREV2_DEFAULT;
+    R.PEP_period = PEP_PERIOD;
+    R.AVG_period = 0;
+    R.low_power_floor = FLOOR_TEN_mW;
+    R.correction_si5351_no1 = 0;
+    R.correction_si5351_no2 = 0;
+    R.xtal_si5351_no1 = SI5351_XTAL_FREQ;
+    R.xtal_si5351_no2 = SI5351_XTAL_FREQ;
+    R.wifi_onoff = 1;
+    R.scale_watt = CAL_SCALE_WATT;
 }

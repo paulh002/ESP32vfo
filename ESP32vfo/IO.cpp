@@ -1,6 +1,3 @@
-// 
-// 
-// 
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <TCA9548.h>
@@ -10,6 +7,7 @@
 #include "IO.h"
 #include "measurement.h"
 #include "si5351.h"
+#include "BandFilter.h"
 
 TCA9548		tca(0x70);
 
@@ -46,14 +44,6 @@ void IRAM_ATTR moved()
 
 Si5351 si5351(SI5351_BUS_BASE_ADDR);
 Si5351 si5351_bfo(SI5351_BUS_BASE_ADDR);
-
-/*-------------------------------------------------------
-   74HC595 Connection
---------------------------------------------------------*/
-
-#define SER   19  // (74HC595 GPIO pin 13)
-#define SRCLK 32  // (74HC595 GPIO pin 12)
-#define RCLK  33  // (74HC595 GPIO pin 25)
 
 void tca_channel(int channel)
 {
@@ -114,11 +104,8 @@ void init_io()
 	si5351_bfo.output_enable(CLK_BFO_TX, 0);
 	si5351_bfo.output_enable(CLK_NA, 0);
 
+	bpf.Setup();
 	tca.selectChannel(2);
-
-	filter_init();
-	shiftOut(BP_80M, LP_80M,0);
-
 }
 
 void io_setbfo(uint32_t bfo_frq)
@@ -176,80 +163,6 @@ void io_rxtx(uint8_t rxtx)
 	}
 }
 
-void filter_init(void) {}
-	
-void shiftOut(byte bpf, byte lpf, int rxtx)
-{
-
-}
-
-/*
-int latchPin = RCLK;
-int clockPin = SRCLK;
-int dataPin = SER;
-
-void filter_init(void) {
-	pinMode(latchPin, OUTPUT);
-	pinMode(clockPin, OUTPUT);
-	pinMode(dataPin, OUTPUT);
-	digitalWrite(dataPin, 0);
-	digitalWrite(clockPin, 0);
-	digitalWrite(latchPin, 0);
-}
-
-void shiftOut(byte bpf, byte lpf, int rxtx) {
-
-	byte myDataOut;
-	int i = 0, ii = 0;
-	int pinState;
-
-	pinMode(clockPin, OUTPUT);
-	pinMode(dataPin, OUTPUT);
-
-	digitalWrite(dataPin, 0);
-	digitalWrite(clockPin, 0);
-	digitalWrite(latchPin, 0);
-
-
-	for (ii = 0; ii < 3; ii++)
-	{
-		switch (ii)
-		{
-		case 0:
-			myDataOut = lpf;
-			if (rxtx)
-				myDataOut |= LP_TX;
-			break;
-
-		case 1:
-			if (rxtx)
-				myDataOut = SW_TX;
-			else
-				myDataOut = SW_RX;
-			break;
-
-		case 2:
-			myDataOut = bpf;
-			break;
-		}
-		for (i = 7; i >= 0; i--) {
-			digitalWrite(clockPin, 0);
-			if (myDataOut & (1 << i)) {
-				pinState = 1;
-			}
-			else {
-				pinState = 0;
-			}
-			digitalWrite(dataPin, pinState);
-			digitalWrite(clockPin, 1);
-			digitalWrite(dataPin, 0);
-			delay(1);
-		}
-	}
-	digitalWrite(clockPin, 0);
-	digitalWrite(latchPin, 1);
-}
-*/
 
 #define CAL_FREQ		12500000L//10000000L
 #define CAL_BFO_FREQ	8998000L
