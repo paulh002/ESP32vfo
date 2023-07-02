@@ -72,45 +72,46 @@ void BandFilter::Setup()
         i++;
     } while (i < 10);
     PCF_BPF0.write8(bpf080);
-    PCF_BPF1.write8(bpf080);
+    PCF_BPF1.write8(bpf180);
 }
 
 void BandFilter::setBand(int band, int rxtx)
 {
     int bpf0, bpf1, lpf;
+    char str[80];
+    
 
-    tca.selectChannel(4);
     if (rxtx)
     {// tx
         switch (band)
         {
-        case 160:
+        case 160:;
             bpf0 = bpf0trg;
             bpf1 = bpf1trgtx;
             break;
         case 80:
-            bpf0 = bpf0trg;
-            bpf1 = bpf1trgtx;
+            bpf0 = bpf080;
+            bpf1 = bpf180tx;
             break;
         case 60:
             bpf0 = bpf0trg;
             bpf1 = bpf1trgtx;
             break;
         case 40:
-            bpf0 = bpf0trg;
-            bpf1 = bpf1trgtx;
+            bpf0 = bpf040;
+            bpf1 = bpf140tx;
             break;
         case 30:
             bpf0 = bpf0trg;
             bpf1 = bpf1trgtx;
             break;
         case 20:
-            bpf0 = bpf0trg;
-            bpf1 = bpf1trgtx;
+            bpf0 = bpf020;
+            bpf1 = bpf120tx;
             break;
         case 18:
-            bpf0 = bpf0trg;
-            bpf1 = bpf1trgtx;
+            bpf0 = bpf017;
+            bpf1 = bpf117tx;
             break;
         case 15:
             bpf0 = bpf0trg;
@@ -121,6 +122,8 @@ void BandFilter::setBand(int band, int rxtx)
             bpf1 = bpf1trgtx;
             break;
         }
+        sprintf(str, "send i2c tx %x %x ", bpf0, bpf1);
+        Serial.println(str);
     }
     else
     {// rx
@@ -131,28 +134,28 @@ void BandFilter::setBand(int band, int rxtx)
             bpf1 = bpf1trg;
             break;
         case 80:
-            bpf0 = bpf0trg;
-            bpf1 = bpf1trg;
+            bpf0 = bpf080;
+            bpf1 = bpf180;
             break;
         case 60:
             bpf0 = bpf0trg;
             bpf1 = bpf1trg;
             break;
         case 40:
-            bpf0 = bpf0trg;
-            bpf1 = bpf1trg;
+            bpf0 = bpf040;
+            bpf1 = bpf140;
             break;
         case 30:
             bpf0 = bpf0trg;
             bpf1 = bpf1trg;
             break;
         case 20:
-            bpf0 = bpf0trg;
-            bpf1 = bpf1trg;
+            bpf0 = bpf020;
+            bpf1 = bpf120;
             break;
         case 18:
-            bpf0 = bpf0trg;
-            bpf1 = bpf1trg;
+            bpf0 = bpf017;
+            bpf1 = bpf117;
             break;
         case 15:
             bpf0 = bpf0trg;
@@ -163,8 +166,12 @@ void BandFilter::setBand(int band, int rxtx)
             bpf1 = bpf1trg;
             break;
         }
+     sprintf(str, "send i2c rx %x %x ", bpf0, bpf1);
+     Serial.println(str);
+
     }
 
+    tca.selectChannel(4); 
     PCF_BPF0.write8(bpf0);
     PCF_BPF1.write8(bpf1);
     tca.selectChannel(2);

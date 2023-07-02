@@ -1274,7 +1274,7 @@ void Gui::operator()(void* arg)
 			updateBottomStatus(color_t, String(sStr + " Fwd: " + String(adc_ref * ((double)fwd / 4096.0)) + "V Rev: " + String(adc_ref * ((double)rev / 4096.0))).c_str(), 0);
 		}
 
-		CheckCAT();
+		//CheckCAT();
 		check_rx_tx(); 
 		vTaskDelay(1);
 	}

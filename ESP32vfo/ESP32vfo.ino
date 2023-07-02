@@ -51,7 +51,7 @@ void setup() {
 	init_vfo(); // load default values for R
 	CAT.begin(true);
 	start_vfo();
-	//LoadEEPROM();
+	LoadEEPROM();
 	gui.gui_setup();
 
 	R.wifi_onoff = true;

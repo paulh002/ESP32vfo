@@ -13,7 +13,7 @@
 #define FWD_METER     33            // GPIO port Fwd-Meter
 #define REV_METER     39             // GPIO port Rev-Meter
 
-#define COLDSTART_REF   99
+#define COLDSTART_REF   1
 
 #define TWENTYTOONE               0 // 1 to select the values for 20 to 1 coupler, else 0
 #define SAMPLE_TIMER           1000 // Interrupt timer, in microseconds

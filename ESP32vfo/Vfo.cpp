@@ -379,10 +379,15 @@ long switch_vfo(int active_vfo)
 	return frq;
 }
 
+int get_band(int active_vfo)
+{
+	return bandswitch[f_band[active_vfo]];
+}
+
 // send commands to lpf and bpf
 void switch_band(int active_vfo, int txrx)
 {
-	bpf.setBand(f_band[active_vfo], txrx);
+	bpf.setBand(get_band(active_vfo), txrx);
 }
 
 long get_vfo_frequency(int active_vfo)

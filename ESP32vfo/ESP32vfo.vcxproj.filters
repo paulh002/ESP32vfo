@@ -48,6 +48,9 @@
     <ClInclude Include="PCF8574.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="PowerSwr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gui.cpp">
@@ -91,6 +94,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="PCF8574.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PowerSwr.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
