@@ -15,6 +15,7 @@
 #include "vfo.h"
 #include "io.h"
 #include "gui.h"
+#include "PowerSwr.h"
 
 Gui gui;
 #define LVGL_TICK_PERIOD 10
@@ -22,10 +23,10 @@ Gui gui;
 #define PULSE_INPUT_PIN 17  // Rotaty Encoder A
 #define PULSE_CTRL_PIN  23  // Rotaty Encoder B
 
-const int screenWidth = 320;
-const int screenHeight = 240;
-const int topHeight = 25;
-const int bottomHeight = 40;
+extern const int screenWidth = 320;
+extern const int screenHeight = 240;
+extern const int topHeight = 25;
+extern const int bottomHeight = 40;
 const int nobuttons = 6;
 const int bottombutton_width = (screenWidth / nobuttons) - 2;
 const int bottombutton_width1 = (screenWidth / nobuttons);
@@ -675,6 +676,7 @@ void Gui::init()
 	lv_group_focus_obj(lsb_button);
 	lv_obj_add_state(lsb_button, LV_STATE_CHECKED);
 	init_wifi();
+	powerSwr.init(scr);
 	return;
 }
 
@@ -1274,7 +1276,7 @@ void Gui::operator()(void* arg)
 			updateBottomStatus(color_t, String(sStr + " Fwd: " + String(adc_ref * ((double)fwd / 4096.0)) + "V Rev: " + String(adc_ref * ((double)rev / 4096.0))).c_str(), 0);
 		}
 
-		//CheckCAT();
+		CheckCAT();
 		check_rx_tx(); 
 		vTaskDelay(1);
 	}

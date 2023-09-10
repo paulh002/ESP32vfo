@@ -78,7 +78,7 @@ void BandFilter::Setup()
 void BandFilter::setBand(int band, int rxtx)
 {
     int bpf0, bpf1, lpf;
-    char str[80];
+    //char str[80];
     
 
     if (rxtx)
@@ -109,7 +109,7 @@ void BandFilter::setBand(int band, int rxtx)
             bpf0 = bpf020;
             bpf1 = bpf120tx;
             break;
-        case 18:
+        case 17:
             bpf0 = bpf017;
             bpf1 = bpf117tx;
             break;
@@ -122,8 +122,8 @@ void BandFilter::setBand(int band, int rxtx)
             bpf1 = bpf1trgtx;
             break;
         }
-        sprintf(str, "send i2c tx %x %x ", bpf0, bpf1);
-        Serial.println(str);
+        //sprintf(str, "send i2c tx %x %x ", bpf0, bpf1);
+        //Serial.println(str);
     }
     else
     {// rx
@@ -153,7 +153,7 @@ void BandFilter::setBand(int band, int rxtx)
             bpf0 = bpf020;
             bpf1 = bpf120;
             break;
-        case 18:
+        case 17:
             bpf0 = bpf017;
             bpf1 = bpf117;
             break;
@@ -166,8 +166,8 @@ void BandFilter::setBand(int band, int rxtx)
             bpf1 = bpf1trg;
             break;
         }
-     sprintf(str, "send i2c rx %x %x ", bpf0, bpf1);
-     Serial.println(str);
+     //sprintf(str, "send i2c rx %x %x ", bpf0, bpf1);
+     //Serial.println(str);
 
     }
 

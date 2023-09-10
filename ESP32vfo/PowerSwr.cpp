@@ -6,9 +6,26 @@ PowerSwr powerSwr;
 LV_FONT_DECLARE(FreeSansOblique42);
 LV_FONT_DECLARE(FreeSansOblique24);
 
-void PowerSwr::init(lv_obj_t* tabview_tab, lv_group_t* button_group)
+extern const int screenWidth;
+extern const int screenHeight;
+extern const int topHeight;
+extern const int bottomHeight;
+
+void PowerSwr::init(lv_obj_t* scr)
 {
-	lv_obj_t* tabview = lv_tabview_add_tab(tabview_tab, "SWR");
+	lv_style_init(&mid_style);
+	lv_style_set_radius(&mid_style, 0);
+	lv_style_set_bg_color(&mid_style, lv_color_make(0x00, 0x00, 0x00));
+	lv_style_set_border_width(&mid_style, 0);
+
+	tabview =  lv_obj_create(scr);
+	lv_obj_add_style(tabview, &mid_style, 0);
+	lv_obj_set_pos(tabview, 0, topHeight);
+	lv_obj_set_size(tabview, LV_HOR_RES, screenHeight - topHeight);
+	lv_obj_clear_flag(tabview, LV_OBJ_FLAG_SCROLLABLE);
+	lv_obj_set_style_pad_hor(tabview, 0, LV_PART_MAIN);
+	lv_obj_set_style_pad_ver(tabview, 0, LV_PART_MAIN);
+	lv_obj_move_background(tabview);
 
 	int swrHeight = lv_obj_get_height(tabview) / 2;	
 	const int pwr_width = 4 * (LV_HOR_RES / 8) + 10;
@@ -76,9 +93,6 @@ void PowerSwr::init(lv_obj_t* tabview_tab, lv_group_t* button_group)
 	
 	SwrBar.init(tabview, 7 * (LV_HOR_RES / 8), 30);
 	SwrBar.align(tabview, LV_ALIGN_BOTTOM_MID, 0, 0);
-
-	//lv_group_add_obj(button_group, usb_button);
-
 }
 
 void PowerSwr::setPowerValue(double pwrValue)
